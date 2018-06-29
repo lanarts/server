@@ -3,10 +3,13 @@ const {STRING, DATA, INTEGER} = sequelize;
 const UUID = {type: sequelize.UUID, defaultValue: sequelize.UUIDV4, primaryKey: true};
 const NAME_UNIQ = {type: sequelize.STRING, unique: true};
 const NAME = STRING;
+const Op = sequelize.Op;
 
 const DB = new sequelize('', '', '', {
     host: 'sqlite://:memory:',
     dialect: 'sqlite',
+    logging: false,
+    operatorAliases: false,
     // SQLite only
     storage: 'testdb.sqlite',
 });
@@ -61,15 +64,26 @@ main();
 
 // Where
 async function main() {
+    // await DB.sync({alter: true});
     await DB.sync();
-
-    const gallanthor = await Account.create({
-        name: 'Gallanthor',
-        data: {
-            hasStarBesideName: true
+    try {
+        const [gallanthor] = await Account.findOrCreate({
+            where: {name: 'Gallanthor'},
+            defaults: {
+                data: {
+                    hasStarBesideName: true
+                }
+            }
+        });
+        console.log(gallanthor.toJSON());
+        // const allAccounts = await Account.findAll({where: {name: 'Gallanthor'}})
+        // console.log(allAccounts)
+    } catch (err) {
+        if (err.constructor === sequelize.ValidationError) {
+            console.log("WHAAAT")
         }
-    });
-    console.log(gallanthor.toJSON());
+        console.log(err)
+    }
 }
 
 function createModels(schemas) {
